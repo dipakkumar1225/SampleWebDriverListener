@@ -4,20 +4,30 @@ import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
-import io.appium.java_client.pagefactory.AndroidFindBy;
-import io.appium.java_client.pagefactory.AppiumFieldDecorator;
+import io.appium.java_client.pagefactory.*;
 import io.appium.java_client.remote.AutomationName;
+import io.appium.java_client.remote.MobilePlatform;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.events.EventFiringDecorator;
 import org.openqa.selenium.support.events.WebDriverListener;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DemoAppTest {
 
@@ -29,9 +39,9 @@ public class DemoAppTest {
                 .autoGrantPermissions()
                 .setFullReset(false)
                 .setNoReset(true)
-                .setApp(new File(System.getProperty("user.dir") + File.separator + "src" + File.separator + "test" + File.separator + "resources" + File.separator + "Android-MyDemoAppRN.1.3.0.build-244.apk").toString())
-                .setAppPackage("com.saucelabs.mydemoapp.rn")
-                .setAppActivity("com.saucelabs.mydemoapp.rn.MainActivity");
+                .setApp(new File(System.getProperty("user.dir") + File.separator + "src" + File.separator + "test" + File.separator + "resources" + File.separator + "Android.SauceLabs.Mobile.Sample.app.2.7.1.apk").toString())
+                .setAppPackage("com.swaglabsmobileapp")
+                .setAppActivity("com.swaglabsmobileapp.SplashActivity");
 
         URL url;
         try {
@@ -49,6 +59,11 @@ public class DemoAppTest {
         WebElement webElementNavOpenMenu = decoratedAppiumDriver.findElement(locatorNavOpenMenu);
         webElementNavOpenMenu.click();
 
+        By locatorMenuList = AppiumBy.androidUIAutomator("new UiSelector().className(\"android.view.ViewGroup\").descriptionStartsWith(\"menu item\").childSelector(new UiSelector().className(\"android.widget.TextView\"))");
+        List<WebElement> webElementListMenuNames = decoratedAppiumDriver.findElements(locatorMenuList);
+        ;
+        System.out.println("Menu Name List : " + webElementListMenuNames.stream().map(WebElement::getText).collect(Collectors.toList()));
+
         By locatorMenuItemLogIn = AppiumBy.accessibilityId("menu item log in");
         WebElement webElementMenuItemLogIn = decoratedAppiumDriver.findElement(locatorMenuItemLogIn);
         webElementMenuItemLogIn.click();
@@ -62,28 +77,51 @@ public class DemoAppTest {
         webElementPwdPassword.sendKeys("10203040");
     }
 
-    @AndroidFindBy(accessibility = "open menu")
-    private WebElement webElementNavOpenMenu1;
-    @AndroidFindBy(accessibility = "menu item log in")
-    private WebElement webElementMenuItemLogIn1;
-    @AndroidFindBy(accessibility = "Username input field")
+
+    @AndroidFindBy(uiAutomator = "new UiSelector().className(\"android.view.ViewGroup\").descriptionStartsWith(\"test-\").childSelector(new UiSelector().className(\"android.widget.TextView\"))")
+//    @AndroidFindBy(xpath = "//android.view.ViewGroup[contains(@content-desc, \"menu item\")]/android.widget.TextView")
+    private List<WebElement> webElementListMenuNames;
+
+    @AndroidFindBy(accessibility = "test-WEBVIEW")
+    private WebElement webElementMenuItemWebView1;
+
+
+    @AndroidFindBy(accessibility = "test-enter a https url here...")
+    private WebElement webElementTxtURL;
+
+    @AndroidFindBy(accessibility = "test-GO TO SITE")
+    private WebElement webElementBtnGoToSite;
+
+    @AndroidFindBy(uiAutomator = "new UiSelector().className(\"android.webkit.WebView\").text(\"Google\")")
+    private WebElement webElementWebView;
+
+    @FindBy(css = "input[aria-label=\"Search\"]")
+    private WebElement webElementTxtInput;
+
+    @AndroidFindBy(accessibility = "test-Username")
     private WebElement webElementTxtUserName1;
-    @AndroidFindBy(accessibility = "Password input field")
+    @AndroidFindBy(accessibility = "test-Password")
     private WebElement webElementPwdPassword1;
-    @AndroidFindBy(accessibility = "Login button")
+    @AndroidFindBy(accessibility = "test-LOGIN")
     private WebElement webElementBtnLogin1;
+
+    @AndroidFindBy(accessibility = "test-Menu")
+    private WebElement webElementNavOpenMenu1;
 
     @Test
     public void withPageFactory() {
 
         UiAutomator2Options uiAutomator2Options = new UiAutomator2Options()
                 .setAutomationName(AutomationName.ANDROID_UIAUTOMATOR2)
+                .setPlatformName("android")
+                .setDeviceName("ZD2222ZKDN")
                 .autoGrantPermissions()
                 .setFullReset(false)
                 .setNoReset(true)
-                .setApp(new File(System.getProperty("user.dir") + File.separator + "src" + File.separator + "test" + File.separator + "resources" + File.separator + "Android-MyDemoAppRN.1.3.0.build-244.apk").toString())
-                .setAppPackage("com.saucelabs.mydemoapp.rn")
-                .setAppActivity("com.saucelabs.mydemoapp.rn.MainActivity");
+                .setAppWaitForLaunch(true)
+                .setApp(new File(System.getProperty("user.dir") + File.separator + "src" + File.separator + "test" + File.separator + "resources" + File.separator + "Android.SauceLabs.Mobile.Sample.app.2.7.1.apk").toString())
+                .setAppPackage("com.swaglabsmobileapp")
+                .setAppActivity("com.swaglabsmobileapp.SplashActivity");
 
         URL url;
         try {
@@ -92,19 +130,40 @@ public class DemoAppTest {
             throw new RuntimeException(e);
         }
 
-        AppiumDriver originalAppiumDriver = new AndroidDriver(url, uiAutomator2Options);
+        AndroidDriver originalAppiumDriver = new AndroidDriver(url, uiAutomator2Options);
 
         WebDriverListener webDriverListener = new DemoWebDriverListener();
         WebDriver decoratedAppiumDriver = new EventFiringDecorator<>(webDriverListener).decorate(originalAppiumDriver);
+
         PageFactory.initElements(new AppiumFieldDecorator(decoratedAppiumDriver), this);
+        PageFactory.initElements(new AppiumElementLocatorFactory(decoratedAppiumDriver, Duration.ofSeconds(1), new DefaultElementByBuilder(MobilePlatform.ANDROID, AutomationName.ANDROID_UIAUTOMATOR2)), this);
 
+        //Login
+
+        webElementTxtUserName1.sendKeys("standard_user");
+        webElementPwdPassword1.sendKeys("secret_sauce");
+        webElementBtnLogin1.click();
+
+        //Nav-Menu
         webElementNavOpenMenu1.click();
+        System.out.println("Menu Name List : " + webElementListMenuNames.stream().map(WebElement::getText).collect(Collectors.toList()));
 
-        webElementMenuItemLogIn1.click();
+        webElementMenuItemWebView1.click();
 
-        webElementTxtUserName1.sendKeys("bob@example.com");
+        webElementTxtURL.sendKeys("https://www.google.com");
+        webElementBtnGoToSite.click();
 
-        webElementPwdPassword1.sendKeys("10203040");
+        //Webview
+        String strWebContextName = ((AndroidDriver)decoratedAppiumDriver).getContextHandles().stream().filter(ctx -> ctx.contains("WEBVIEW_")).findAny().orElse(null);
+        if (Objects.nonNull(strWebContextName)) {
+            System.out.println("WEB CONTEXT NAME " + strWebContextName);
+            ((AndroidDriver)decoratedAppiumDriver).context(strWebContextName);
+        }
+
+        webElementTxtInput.sendKeys("Appium");
+        decoratedAppiumDriver.quit();
     }
+
+
 }
 
