@@ -4,17 +4,18 @@ import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
+import io.appium.java_client.internal.CapabilityHelpers;
 import io.appium.java_client.pagefactory.*;
+import io.appium.java_client.pagefactory.utils.WebDriverUnpackUtility;
 import io.appium.java_client.remote.AutomationName;
 import io.appium.java_client.remote.MobilePlatform;
 import org.junit.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.events.EventFiringDecorator;
 import org.openqa.selenium.support.events.WebDriverListener;
+import org.openqa.selenium.support.pagefactory.DefaultFieldDecorator;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -136,10 +137,17 @@ public class DemoAppTest {
         WebDriver decoratedAppiumDriver = new EventFiringDecorator<>(webDriverListener).decorate(originalAppiumDriver);
 
         PageFactory.initElements(new AppiumFieldDecorator(decoratedAppiumDriver), this);
-        PageFactory.initElements(new AppiumElementLocatorFactory(decoratedAppiumDriver, Duration.ofSeconds(1), new DefaultElementByBuilder(MobilePlatform.ANDROID, AutomationName.ANDROID_UIAUTOMATOR2)), this);
+
+        String platform = null;
+        String automation = null;
+        if (decoratedAppiumDriver instanceof HasCapabilities) {
+            Capabilities caps = ((HasCapabilities) decoratedAppiumDriver).getCapabilities();
+            platform = CapabilityHelpers.getCapability(caps, "platformName", String.class);
+            automation = CapabilityHelpers.getCapability(caps, "automationName", String.class);
+        }
+        PageFactory.initElements(new AppiumElementLocatorFactory(decoratedAppiumDriver, Duration.ofSeconds(1), new DefaultElementByBuilder(platform, automation)), this);
 
         //Login
-
         webElementTxtUserName1.sendKeys("standard_user");
         webElementPwdPassword1.sendKeys("secret_sauce");
         webElementBtnLogin1.click();
@@ -154,10 +162,10 @@ public class DemoAppTest {
         webElementBtnGoToSite.click();
 
         //Webview
-        String strWebContextName = ((AndroidDriver)decoratedAppiumDriver).getContextHandles().stream().filter(ctx -> ctx.contains("WEBVIEW_")).findAny().orElse(null);
+        String strWebContextName = originalAppiumDriver.getContextHandles().stream().filter(ctx -> ctx.contains("WEBVIEW_")).findAny().orElse(null);
         if (Objects.nonNull(strWebContextName)) {
             System.out.println("WEB CONTEXT NAME " + strWebContextName);
-            ((AndroidDriver)decoratedAppiumDriver).context(strWebContextName);
+            originalAppiumDriver.context(strWebContextName);
         }
 
         webElementTxtInput.sendKeys("Appium");
